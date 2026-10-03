@@ -1,71 +1,111 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Проект "Комменты"</title>
-    <meta charset="utf-8" />
-    <link rel="stylesheet" href="styles.css" />
-  </head>
 
-  <body>
-    <div class="container">
-      <ul class="comments">
-        <li class="comment">
-          <div class="comment-header">
-            <div>Глеб Фокин</div>
-            <div>12.02.22 12:18</div>
-          </div>
-          <div class="comment-body">
-            <div class="comment-text">
-              Это будет первый комментарий на этой странице
-            </div>
-          </div>
-          <div class="comment-footer">
-            <div class="likes">
-              <span class="likes-counter">3</span>
-              <button class="like-button"></button>
-            </div>
-          </div>
-        </li>
-        <li class="comment">
-          <div class="comment-header">
-            <div>Варвара Н.</div>
-            <div>13.02.22 19:22</div>
-          </div>
-          <div class="comment-body">
-            <div class="comment-text">
-              Мне нравится как оформлена эта страница! ❤
-            </div>
-          </div>
-          <div class="comment-footer">
-            <div class="likes">
-              <span class="likes-counter">75</span>
-              <button class="like-button -active-like"></button>
-            </div>
-          </div>
-        </li>
-      </ul>
-      <div class="add-form">
-        <input
-          type="text"
-          class="add-form-name"
-          placeholder="Введите ваше имя"
-        />
-        <textarea
-          type="textarea"
-          class="add-form-text"
-          placeholder="Введите ваш коментарий"
-          rows="4"
-        ></textarea>
-        <div class="add-form-row">
-          <button class="add-form-button">Написать</button>
+<head>
+  <title>Проект "Комменты"</title>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <div class="container">
+    <ul class="comments" id="list-comment">
+      <li class="comment">
+        <div class="comment-header">
+          <div>Глеб Фокин</div>
+          <div>12.02.22 12:18</div>
         </div>
+        <div class="comment-body">
+          <div class="comment-text">
+            Это будет первый комментарий на этой странице
+          </div>
+        </div>
+        <div class="comment-footer">
+          <div class="likes">
+            <span class="likes-counter">3</span>
+            <button class="like-button"></button>
+          </div>
+        </div>
+      </li>
+      <li class="comment">
+        <div class="comment-header">
+          <div>Варвара Н.</div>
+          <div>13.02.22 19:22</div>
+        </div>
+        <div class="comment-body">
+          <div class="comment-text">
+            Мне нравится как оформлена эта страница! ❤
+          </div>
+        </div>
+        <div class="comment-footer">
+          <div class="likes">
+            <span class="likes-counter">75</span>
+            <button class="like-button -active-like"></button>
+          </div>
+        </div>
+      </li>
+    </ul>
+    <div class="add-form">
+      <input type="text" class="add-form-name" placeholder="Введите ваше имя" id="name-input" />
+      <textarea type="textarea" class="add-form-text" placeholder="Введите ваш коментарий" rows="4"
+        id="name-comment"></textarea>
+      <div class="add-form-row">
+        <button id="button-comment" class="add-form-button">Написать </button>
       </div>
     </div>
-  </body>
+  </div>
+</body>
 
-  <script>
-    "use strict";
-    // Код писать здесь
-    console.log("It works!");
-  </script>
+<script>
+  const nameInputEl = document.getElementById('name-input');
+  const commentInputEl = document.getElementById('name-comment');
+  const listCommentEl = document.getElementById('list-comment');
+  const buttonCommentEl = document.getElementById('button-comment');
+
+
+  buttonCommentEl.addEventListener('click', () => {
+    // Получаем значения из полей и убираем пробелы по краям
+    const name = nameInputEl.value.trim();
+    const commentText = commentInputEl.value.trim();
+
+    // ВАЛИДАЦИЯ: Проверяем, что поля не пустые
+    if (name === '' || commentText === '') {
+      alert('Пожалуйста, заполните имя и комментарий!');
+      return;
+    }
+    // Получаем текущую дату
+    const currentDate = new Date(); ы
+
+    // 4. Формируем строку нового комментария через innerHTML (конкатенация)
+    const newCommentHTML =
+      '<li class="comment">' +
+      '<div class="comment-header">' +
+      '<div>' + name + '</div>' +
+      '<div>' + currentDate + '</div>' +
+      '</div>' +
+      '<div class="comment-body">' +
+      '<div class="comment-text">' +
+      commentText +
+      '</div>' +
+      '</div>' +
+      '<div class="comment-footer">' +
+      '<div class="likes">' +
+      '<span class="likes-counter">0</span>' +
+      '<button class="like-button"></button>' +
+      '</div>' +
+      '</div>' +
+      '</li>';
+
+    // 5. Добавляем новый комментарий через innerHTML
+    const oldListHtml = listCommentEl.innerHTML;
+    listCommentEl.innerHTML = oldListHtml + newCommentHTML;
+
+    nameInputEl.value = '';
+    commentInputEl.value = '';
+  })
+
+
+  console.log("It works!");
+</script>
+
 </html>
