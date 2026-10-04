@@ -108,49 +108,34 @@
   renderComments();
 
 
-
-
-
+  // 4. Добавление нового комментария
   buttonCommentEl.addEventListener('click', () => {
-    // Получаем значения из полей и убираем пробелы по краям
     const name = nameInputEl.value.trim();
     const commentText = commentInputEl.value.trim();
 
-    // ВАЛИДАЦИЯ: Проверяем, что поля не пустые
     if (name === '' || commentText === '') {
       alert('Пожалуйста, заполните имя и комментарий!');
       return;
     }
-    // Получаем текущую дату
+
     const currentDate = new Date();
 
-    // 4. Формируем строку нового комментария через innerHTML (конкатенация)
-    const newCommentHTML = `
-  <li class="comment">
-    <div class="comment-header">
-      <div>${name}</div>
-      <div>${currentDate}</div>
-    </div>
-    <div class="comment-body">
-      <div class="comment-text">
-        ${commentText}
-      </div>
-    </div>
-    <div class="comment-footer">
-      <div class="likes">
-        <span class="likes-counter">0</span>
-        <button class="like-button"></button>
-      </div>
-    </div>
-  </li>`;
+    comments.push({
+      name: name,
+      date: currentDate.toLocaleString(),
+      text: commentText,
+      likes: 0,
+      liked: false
+    });
 
-    // 5. Добавляем новый комментарий через innerHTML
-    const oldListHtml = listCommentEl.innerHTML;
-    listCommentEl.innerHTML = oldListHtml + newCommentHTML;
+    renderComments();
 
     nameInputEl.value = '';
     commentInputEl.value = '';
-  })
+  });
+
+
+
 
 
   console.log("It works!");
