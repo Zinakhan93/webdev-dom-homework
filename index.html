@@ -74,27 +74,27 @@
       return;
     }
     // Получаем текущую дату
-    const currentDate = new Date(); ы
+    const currentDate = new Date();
 
     // 4. Формируем строку нового комментария через innerHTML (конкатенация)
-    const newCommentHTML =
-      '<li class="comment">' +
-      '<div class="comment-header">' +
-      '<div>' + name + '</div>' +
-      '<div>' + currentDate + '</div>' +
-      '</div>' +
-      '<div class="comment-body">' +
-      '<div class="comment-text">' +
-      commentText +
-      '</div>' +
-      '</div>' +
-      '<div class="comment-footer">' +
-      '<div class="likes">' +
-      '<span class="likes-counter">0</span>' +
-      '<button class="like-button"></button>' +
-      '</div>' +
-      '</div>' +
-      '</li>';
+    const newCommentHTML = `
+  <li class="comment">
+    <div class="comment-header">
+      <div>${name}</div>
+      <div>${currentDate}</div>
+    </div>
+    <div class="comment-body">
+      <div class="comment-text">
+        ${commentText}
+      </div>
+    </div>
+    <div class="comment-footer">
+      <div class="likes">
+        <span class="likes-counter">0</span>
+        <button class="like-button"></button>
+      </div>
+    </div>
+  </li>`;
 
     // 5. Добавляем новый комментарий через innerHTML
     const oldListHtml = listCommentEl.innerHTML;
