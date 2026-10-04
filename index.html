@@ -68,6 +68,45 @@
       });
     }
   };
+  // 3. Рендер-функция (как renderStudents в уроке)
+  const renderComments = () => {
+    const commentsHtml = comments
+      .map((comment, index) => {
+        // Класс активности лайков 
+        let likeButtonClass = 'like-button';
+        if (comment.liked) {
+          likeButtonClass = 'like-button -active-like';
+        } else {
+          likeButtonClass = 'like-button';
+        }
+
+        return `<li class="comment">
+            <div class="comment-header">
+              <div>${comment.name}</div>
+              <div>${comment.date}</div>
+            </div>
+            <div class="comment-body">
+              <div class="comment-text">${comment.text}</div>
+            </div>
+            <div class="comment-footer">
+              <div class="likes">
+                <span class="likes-counter">${comment.likes}</span>
+                <button data-index="${index}" class="${likeButtonClass}"></button>
+              </div>
+            </div>
+          </li>`;
+      })
+      .join('');
+
+    listCommentEl.innerHTML = commentsHtml;
+
+    // После отрисовки заново навешиваем обработчики
+    initLikeButtonsListeners();
+  };
+
+  // Первая отрисовка при загрузке страницы
+  renderComments();
+
 
 
 
