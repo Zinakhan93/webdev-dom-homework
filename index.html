@@ -85,7 +85,25 @@
       });
     }
   };
-  // 3. Рендер-функция (как renderStudents в уроке)
+
+  // 3. Обработчики кликов по карточкам комментариев (ответ на комментарий)
+  const initCommentListeners = () => {
+    const commentElements = document.querySelectorAll('.comment');
+    for (const commentElement of commentElements) {
+      commentElement.addEventListener('click', () => {
+        const index = commentElement.dataset.index;
+        const comment = comments[index];
+        // Подставляем имя автора и цитату его комментария
+        nameInputEl.value = comment.name;
+        commentInputEl.value = `${comment.name}, ${comment.text}`;
+
+        // Ставим курсор в конец textarea
+        commentInputEl.focus();
+      });
+    }
+  };
+
+  // 4. Рендер-функция (как renderStudents в уроке)
   const renderComments = () => {
     const commentsHtml = comments
       .map((comment, index) => {
