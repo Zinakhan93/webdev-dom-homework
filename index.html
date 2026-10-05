@@ -9,8 +9,42 @@
 
 <body>
   <div class="container">
-    <!-- Список рендерится из JS -->
-    <ul class="comments" id="list-comment"></ul>
+    <ul class="comments" id="list-comment">
+      <li class="comment">
+        <div class="comment-header">
+          <div>Глеб Фокин</div>
+          <div>12.02.22 12:18</div>
+        </div>
+        <div class="comment-body">
+          <div class="comment-text">
+            Это будет первый комментарий на этой странице
+          </div>
+        </div>
+        <div class="comment-footer">
+          <div class="likes">
+            <span class="likes-counter">3</span>
+            <button class="like-button"></button>
+          </div>
+        </div>
+      </li>
+      <li class="comment">
+        <div class="comment-header">
+          <div>Варвара Н.</div>
+          <div>13.02.22 19:22</div>
+        </div>
+        <div class="comment-body">
+          <div class="comment-text">
+            Мне нравится как оформлена эта страница! ❤
+          </div>
+        </div>
+        <div class="comment-footer">
+          <div class="likes">
+            <span class="likes-counter">75</span>
+            <button class="like-button -active-like"></button>
+          </div>
+        </div>
+      </li>
+    </ul>
     <div class="add-form">
       <input type="text" class="add-form-name" placeholder="Введите ваше имя" id="name-input" />
       <textarea type="textarea" class="add-form-text" placeholder="Введите ваш коментарий" rows="4"
@@ -29,110 +63,46 @@
   const buttonCommentEl = document.getElementById('button-comment');
 
 
-  // 1.Данные комментариев  будем хранить в массиве
-  const comments = [
-    {
-      name: 'Глеб Фокин',
-      date: '12.02.22 12:18',
-      text: 'Это будет первый комментарий на этой странице',
-      likes: 3,
-      liked: false
-    },
-    {
-      name: 'Варвара Н.',
-      date: '13.02.22 19:22',
-      text: 'Мне нравится как оформлена эта страница! ❤',
-      likes: 75,
-      liked: true
-    }
-  ];
-  // 2. Обработчики лайков (как initDeleteButtonsListeners в уроке)
-  const initLikeButtonsListeners = () => {
-    const likeButtonsElements = document.querySelectorAll('.like-button');
-
-    for (const likeButtonElement of likeButtonsElements) {
-      likeButtonElement.addEventListener('click', () => {
-        const index = likeButtonElement.dataset.index;
-        const comment = comments[index];
-
-        // Меняем данные в массиве, а не в разметке
-        if (comment.liked) {
-          comment.likes = comment.likes - 1;
-          comment.liked = false;
-        } else {
-          comment.likes = comment.likes + 1;
-          comment.liked = true;
-        }
-
-        renderComments();
-      });
-    }
-  };
-  // 3. Рендер-функция (как renderStudents в уроке)
-  const renderComments = () => {
-    const commentsHtml = comments
-      .map((comment, index) => {
-        // Класс активности лайков 
-        let likeButtonClass = 'like-button';
-        if (comment.liked) {
-          likeButtonClass = 'like-button -active-like';
-        } else {
-          likeButtonClass = 'like-button';
-        }
-
-        return `<li class="comment">
-            <div class="comment-header">
-              <div>${comment.name}</div>
-              <div>${comment.date}</div>
-            </div>
-            <div class="comment-body">
-              <div class="comment-text">${comment.text}</div>
-            </div>
-            <div class="comment-footer">
-              <div class="likes">
-                <span class="likes-counter">${comment.likes}</span>
-                <button data-index="${index}" class="${likeButtonClass}"></button>
-              </div>
-            </div>
-          </li>`;
-      })
-      .join('');
-
-    listCommentEl.innerHTML = commentsHtml;
-
-    // После отрисовки заново навешиваем обработчики
-    initLikeButtonsListeners();
-  };
-
-  // Первая отрисовка при загрузке страницы
-  renderComments();
-
-
-  // 4. Добавление нового комментария
   buttonCommentEl.addEventListener('click', () => {
+    // Получаем значения из полей и убираем пробелы по краям
     const name = nameInputEl.value.trim();
     const commentText = commentInputEl.value.trim();
 
+    // ВАЛИДАЦИЯ: Проверяем, что поля не пустые
     if (name === '' || commentText === '') {
       alert('Пожалуйста, заполните имя и комментарий!');
       return;
     }
-
+    // Получаем текущую дату
     const currentDate = new Date();
 
-    comments.push({
-      name: name,
-      date: currentDate.toLocaleString(),
-      text: commentText,
-      likes: 0,
-      liked: false
-    });
+    // 4. Формируем строку нового комментария через innerHTML (конкатенация)
+    const newCommentHTML = `
+  <li class="comment">
+    <div class="comment-header">
+      <div>${name}</div>
+      <div>${currentDate}</div>
+    </div>
+    <div class="comment-body">
+      <div class="comment-text">
+        ${commentText}
+      </div>
+    </div>
+    <div class="comment-footer">
+      <div class="likes">
+        <span class="likes-counter">0</span>
+        <button class="like-button"></button>
+      </div>
+    </div>
+  </li>`;
 
-    renderComments();
+    // 5. Добавляем новый комментарий через innerHTML
+    const oldListHtml = listCommentEl.innerHTML;
+    listCommentEl.innerHTML = oldListHtml + newCommentHTML;
 
     nameInputEl.value = '';
     commentInputEl.value = '';
-  });
+  })
 
 
   console.log("It works!");
