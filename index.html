@@ -64,7 +64,11 @@
     const likeButtonsElements = document.querySelectorAll('.like-button');
 
     for (const likeButtonElement of likeButtonsElements) {
-      likeButtonElement.addEventListener('click', () => {
+      likeButtonElement.addEventListener('click', (event) => {
+        // Останавливаем всплытие, чтобы клик по лайку
+        // не срабатывал как клик по карточке комментария
+        event.stopPropagation();
+
         const index = likeButtonElement.dataset.index;
         const comment = comments[index];
 
