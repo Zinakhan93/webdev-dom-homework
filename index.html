@@ -114,14 +114,18 @@
         } else {
           likeButtonClass = 'like-button';
         }
+        // Экранируем пользовательские данные!
+        const safeName = escapeHtml(comment.name);
+        const safeText = escapeHtml(comment.text);
 
-        return `<li class="comment">
+
+        return `<li class="comment" data-index="${index}">
             <div class="comment-header">
-              <div>${comment.name}</div>
+              <div>${safeName}</div>
               <div>${comment.date}</div>
             </div>
             <div class="comment-body">
-              <div class="comment-text">${comment.text}</div>
+              <div class="comment-text">${safeText}</div>
             </div>
             <div class="comment-footer">
               <div class="likes">
@@ -137,6 +141,7 @@
 
     // После отрисовки заново навешиваем обработчики
     initLikeButtonsListeners();
+    initCommentListeners();
   };
 
   // Первая отрисовка при загрузке страницы
