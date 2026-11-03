@@ -29,6 +29,19 @@
   const buttonCommentEl = document.getElementById('button-comment');
 
 
+
+  // 0. Функция экранирования HTML (защита от XSS)
+  function escapeHtml(str) {
+    return str
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
+  }
+
+
+
   // 1.Данные комментариев  будем хранить в массиве
   const comments = [
     {
@@ -51,7 +64,11 @@
     const likeButtonsElements = document.querySelectorAll('.like-button');
 
     for (const likeButtonElement of likeButtonsElements) {
-      likeButtonElement.addEventListener('click', () => {
+      likeButtonElement.addEventListener('click', (event) => {
+        // Останавливаем всплытие, чтобы клик по лайку
+        // не срабатывал как клик по карточке комментария
+        event.stopPropagation();
+
         const index = likeButtonElement.dataset.index;
         const comment = comments[index];
 
@@ -68,7 +85,25 @@
       });
     }
   };
-  // 3. Рендер-функция (как renderStudents в уроке)
+
+  // 3. Обработчики кликов по карточкам комментариев (ответ на комментарий)
+  const initCommentListeners = () => {
+    const commentElements = document.querySelectorAll('.comment');
+    for (const commentElement of commentElements) {
+      commentElement.addEventListener('click', () => {
+        const index = commentElement.dataset.index;
+        const comment = comments[index];
+        // Подставляем имя автора и цитату его комментария
+        nameInputEl.value = comment.name;
+        commentInputEl.value = `${comment.name}, ${comment.text}`;
+
+        // Ставим курсор в конец textarea
+        commentInputEl.focus();
+      });
+    }
+  };
+
+  // 4. Рендер-функция (как renderStudents в уроке)
   const renderComments = () => {
     const commentsHtml = comments
       .map((comment, index) => {
@@ -79,14 +114,18 @@
         } else {
           likeButtonClass = 'like-button';
         }
+        // Экранируем пользовательские данные!
+        const safeName = escapeHtml(comment.name);
+        const safeText = escapeHtml(comment.text);
 
-        return `<li class="comment">
+
+        return `<li class="comment" data-index="${index}">
             <div class="comment-header">
-              <div>${comment.name}</div>
+              <div>${safeName}</div>
               <div>${comment.date}</div>
             </div>
             <div class="comment-body">
-              <div class="comment-text">${comment.text}</div>
+              <div class="comment-text">${safeText}</div>
             </div>
             <div class="comment-footer">
               <div class="likes">
@@ -102,6 +141,7 @@
 
     // После отрисовки заново навешиваем обработчики
     initLikeButtonsListeners();
+    initCommentListeners();
   };
 
   // Первая отрисовка при загрузке страницы
