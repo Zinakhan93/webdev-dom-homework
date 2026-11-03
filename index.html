@@ -23,12 +23,13 @@
 </body>
 
 <script>
+  // ВАЖНО
+  const API_URL = 'https://wedev-api.sky.pro/api/v1/zina-khan/comments';
+
   const nameInputEl = document.getElementById('name-input');
   const commentInputEl = document.getElementById('name-comment');
   const listCommentEl = document.getElementById('list-comment');
   const buttonCommentEl = document.getElementById('button-comment');
-
-
 
   // 0. Функция экранирования HTML (защита от XSS)
   function escapeHtml(str) {
@@ -40,39 +41,58 @@
       .replaceAll("'", '&#39;');
   }
 
+  // Данные комментариев будем хранить в массиве (в формате приложения)
+  let comments = [];
 
+  // Форматируем ISO-дату из API в "DD.MM.YY HH:MM"
+  function formatDate(isoString) {
+    const d = new Date(isoString);
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${String(d.getFullYear()).slice(-2)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
 
-  // 1.Данные комментариев  будем хранить в массиве
-  const comments = [
-    {
-      name: 'Глеб Фокин',
-      date: '12.02.22 12:18',
-      text: 'Это будет первый комментарий на этой странице',
-      likes: 3,
-      liked: false
-    },
-    {
-      name: 'Варвара Н.',
-      date: '13.02.22 19:22',
-      text: 'Мне нравится как оформлена эта страница! ❤',
-      likes: 75,
-      liked: true
-    }
-  ];
-  // 2. Обработчики лайков (как initDeleteButtonsListeners в уроке)
+  // Маппинг ответа API → формат приложения
+  function mapApiComment(apiComment) {
+    return {
+      id: apiComment.id,
+      name: apiComment.author.name,
+      date: formatDate(apiComment.date),
+      text: apiComment.text,
+      likes: apiComment.likes,
+      liked: apiComment.isLiked
+    };
+  }
+
+  // 1. Загрузка комментариев из API (GET)
+  function fetchComments() {
+    return fetch(API_URL) // используем переменную с твоим API_URL
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Ошибка загрузки комментариев');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        // Преобразуем данные из API в формат приложения
+        comments = data.comments.map(mapApiComment);
+        renderComments();
+      })
+      .catch((error) => {
+        console.error(error);
+        alert('Не удалось загрузить комментарии. Попробуйте позже.');
+      });
+  }
+
+  // 2. Обработчики лайков
   const initLikeButtonsListeners = () => {
     const likeButtonsElements = document.querySelectorAll('.like-button');
 
     for (const likeButtonElement of likeButtonsElements) {
       likeButtonElement.addEventListener('click', (event) => {
-        // Останавливаем всплытие, чтобы клик по лайку
-        // не срабатывал как клик по карточке комментария
         event.stopPropagation();
-
         const index = likeButtonElement.dataset.index;
         const comment = comments[index];
 
-        // Меняем данные в массиве, а не в разметке
         if (comment.liked) {
           comment.likes = comment.likes - 1;
           comment.liked = false;
@@ -80,44 +100,35 @@
           comment.likes = comment.likes + 1;
           comment.liked = true;
         }
-
         renderComments();
       });
     }
   };
 
-  // 3. Обработчики кликов по карточкам комментариев (ответ на комментарий)
+  // 3. Обработчики кликов по карточкам (ответ на комментарий)
   const initCommentListeners = () => {
     const commentElements = document.querySelectorAll('.comment');
     for (const commentElement of commentElements) {
       commentElement.addEventListener('click', () => {
         const index = commentElement.dataset.index;
         const comment = comments[index];
-        // Подставляем имя автора и цитату его комментария
         nameInputEl.value = comment.name;
         commentInputEl.value = `${comment.name}, ${comment.text}`;
-
-        // Ставим курсор в конец textarea
         commentInputEl.focus();
       });
     }
   };
 
-  // 4. Рендер-функция (как renderStudents в уроке)
+  // 4. Рендер
   const renderComments = () => {
     const commentsHtml = comments
       .map((comment, index) => {
-        // Класс активности лайков 
         let likeButtonClass = 'like-button';
         if (comment.liked) {
           likeButtonClass = 'like-button -active-like';
-        } else {
-          likeButtonClass = 'like-button';
         }
-        // Экранируем пользовательские данные!
         const safeName = escapeHtml(comment.name);
         const safeText = escapeHtml(comment.text);
-
 
         return `<li class="comment" data-index="${index}">
             <div class="comment-header">
@@ -138,45 +149,67 @@
       .join('');
 
     listCommentEl.innerHTML = commentsHtml;
-
-    // После отрисовки заново навешиваем обработчики
     initLikeButtonsListeners();
     initCommentListeners();
   };
 
-  // Первая отрисовка при загрузке страницы
-  renderComments();
-
-
-  // 4. Добавление нового комментария
+  // 5. Добавление нового комментария (POST + повторный GET)
   buttonCommentEl.addEventListener('click', () => {
     const name = nameInputEl.value.trim();
     const commentText = commentInputEl.value.trim();
 
-    if (name === '' || commentText === '') {
-      alert('Пожалуйста, заполните имя и комментарий!');
+    // Проверка на длину (API требует минимум 3 символа)
+    if (name.length < 3 || commentText.length < 3) {
+      alert('Имя и комментарий должны содержать хотя бы 3 символа!');
       return;
     }
 
-    const currentDate = new Date();
+    buttonCommentEl.disabled = true;
+    buttonCommentEl.textContent = 'Отправка...';
 
-    comments.push({
-      name: name,
-      date: currentDate.toLocaleString(),
-      text: commentText,
-      likes: 0,
-      liked: false
-    });
-
-    renderComments();
-
-    nameInputEl.value = '';
-    commentInputEl.value = '';
+    fetch(API_URL, {
+      method: 'POST',
+      // ВАЖНО: Заголовок Content-Type мы убрали, как того требует API
+      body: JSON.stringify({
+        name: name,
+        text: commentText
+      })
+    })
+      .then((response) => {
+        if (response.status === 201) {
+          return response.json();
+        }
+        if (response.status === 400) {
+          return response.json().then((err) => {
+            throw new Error(err.error || 'Ошибка валидации');
+          });
+        }
+        if (response.status === 500) {
+          throw new Error('Сервер временно недоступен, попробуйте позже');
+        }
+        throw new Error('Неизвестная ошибка');
+      })
+      .then(() => {
+        // После успешного добавления делаем новый GET для обновления списка
+        return fetchComments();
+      })
+      .then(() => {
+        // Очищаем форму
+        nameInputEl.value = '';
+        commentInputEl.value = '';
+      })
+      .catch((error) => {
+        console.error(error);
+        alert(error.message);
+      })
+      .finally(() => {
+        buttonCommentEl.disabled = false;
+        buttonCommentEl.textContent = 'Написать';
+      });
   });
 
-
-
-
+  // Первая загрузка при старте
+  fetchComments();
 
   console.log("It works!");
 </script>
