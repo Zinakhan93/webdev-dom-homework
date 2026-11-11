@@ -9,6 +9,8 @@
 
 <body>
   <div class="container">
+    <!-- Лоадер первичная загрузка -->
+    <div id="loading-comments" class="loading"> Комментарии загружаются...</div>
     <!-- Список рендерится из JS -->
     <ul class="comments" id="list-comment"></ul>
     <div class="add-form">
@@ -30,8 +32,11 @@
   const commentInputEl = document.getElementById('name-comment');
   const listCommentEl = document.getElementById('list-comment');
   const buttonCommentEl = document.getElementById('button-comment');
+  const loadingCommentsEl = document.getElementById('loading-comments');
 
-  // 0. Функция экранирования HTML (защита от XSS)
+  let comments = [];
+
+  // 0. Экранирование HTML
   function escapeHtml(str) {
     return str
       .replaceAll('&', '&amp;')
@@ -41,17 +46,12 @@
       .replaceAll("'", '&#39;');
   }
 
-  // Данные комментариев будем хранить в массиве (в формате приложения)
-  let comments = [];
-
-  // Форматируем ISO-дату из API в "DD.MM.YY HH:MM"
   function formatDate(isoString) {
     const d = new Date(isoString);
     const pad = (n) => String(n).padStart(2, '0');
     return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${String(d.getFullYear()).slice(-2)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
-  // Маппинг ответа API → формат приложения
   function mapApiComment(apiComment) {
     return {
       id: apiComment.id,
@@ -59,13 +59,17 @@
       date: formatDate(apiComment.date),
       text: apiComment.text,
       likes: apiComment.likes,
-      liked: apiComment.isLiked
+      liked: apiComment.isLiked,
     };
   }
 
-  // 1. Загрузка комментариев из API (GET)
+  // 1. Загрузка списка комментариев — отдельная функция, возвращает промис
   function fetchComments() {
-    return fetch(API_URL) // используем переменную с твоим API_URL
+    // Показываем лоадер
+    loadingCommentsEl.style.display = 'block';
+    listCommentEl.style.display = 'none';
+
+    return fetch(API_URL)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Ошибка загрузки комментариев');
@@ -73,26 +77,29 @@
         return response.json();
       })
       .then((data) => {
-        // Преобразуем данные из API в формат приложения
         comments = data.comments.map(mapApiComment);
         renderComments();
       })
       .catch((error) => {
         console.error(error);
         alert('Не удалось загрузить комментарии. Попробуйте позже.');
+        throw error;
+      })
+      .finally(() => {
+        // Прячем лоадер — сработает и при успехе, и при ошибке
+        loadingCommentsEl.style.display = 'none';
+        listCommentEl.style.display = 'block';
       });
   }
 
   // 2. Обработчики лайков
   const initLikeButtonsListeners = () => {
     const likeButtonsElements = document.querySelectorAll('.like-button');
-
     for (const likeButtonElement of likeButtonsElements) {
       likeButtonElement.addEventListener('click', (event) => {
         event.stopPropagation();
         const index = likeButtonElement.dataset.index;
         const comment = comments[index];
-
         if (comment.liked) {
           comment.likes = comment.likes - 1;
           comment.liked = false;
@@ -105,7 +112,7 @@
     }
   };
 
-  // 3. Обработчики кликов по карточкам (ответ на комментарий)
+  // 3. Обработчик клика по карточке
   const initCommentListeners = () => {
     const commentElements = document.querySelectorAll('.comment');
     for (const commentElement of commentElements) {
@@ -131,20 +138,20 @@
         const safeText = escapeHtml(comment.text);
 
         return `<li class="comment" data-index="${index}">
-            <div class="comment-header">
-              <div>${safeName}</div>
-              <div>${comment.date}</div>
+          <div class="comment-header">
+            <div>${safeName}</div>
+            <div>${comment.date}</div>
+          </div>
+          <div class="comment-body">
+            <div class="comment-text">${safeText}</div>
+          </div>
+          <div class="comment-footer">
+            <div class="likes">
+              <span class="likes-counter">${comment.likes}</span>
+              <button data-index="${index}" class="${likeButtonClass}"></button>
             </div>
-            <div class="comment-body">
-              <div class="comment-text">${safeText}</div>
-            </div>
-            <div class="comment-footer">
-              <div class="likes">
-                <span class="likes-counter">${comment.likes}</span>
-                <button data-index="${index}" class="${likeButtonClass}"></button>
-              </div>
-            </div>
-          </li>`;
+          </div>
+        </li>`;
       })
       .join('');
 
@@ -153,27 +160,24 @@
     initCommentListeners();
   };
 
-  // 5. Добавление нового комментария (POST + повторный GET)
+  // 5. Отправка комментария
   buttonCommentEl.addEventListener('click', () => {
     const name = nameInputEl.value.trim();
     const commentText = commentInputEl.value.trim();
 
-    // Проверка на длину (API требует минимум 3 символа)
     if (name.length < 3 || commentText.length < 3) {
       alert('Имя и комментарий должны содержать хотя бы 3 символа!');
       return;
     }
 
+    // Блокируем кнопку и показываем состояние загрузки
     buttonCommentEl.disabled = true;
     buttonCommentEl.textContent = 'Отправка...';
 
+    // ВАЖНО: сначала POST, затем повторный GET через цепочку промисов
     fetch(API_URL, {
       method: 'POST',
-      // ВАЖНО: Заголовок Content-Type мы убрали, как того требует API
-      body: JSON.stringify({
-        name: name,
-        text: commentText
-      })
+      body: JSON.stringify({ name, text: commentText }),
     })
       .then((response) => {
         if (response.status === 201) {
@@ -189,12 +193,8 @@
         }
         throw new Error('Неизвестная ошибка');
       })
+      .then(() => fetchComments()) // перезапрашиваем список
       .then(() => {
-        // После успешного добавления делаем новый GET для обновления списка
-        return fetchComments();
-      })
-      .then(() => {
-        // Очищаем форму
         nameInputEl.value = '';
         commentInputEl.value = '';
       })
@@ -208,7 +208,7 @@
       });
   });
 
-  // Первая загрузка при старте
+  // Первичная загрузка
   fetchComments();
 
   console.log("It works!");
